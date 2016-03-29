@@ -3,7 +3,9 @@
 #include<cstdlib>
 #include "random"
 #include "math.h"
-#include<sys/time.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+using namespace boost::posix_time;
 
 // Sets page size in KB
 static const int page_size = 4;
@@ -12,25 +14,15 @@ static const int page_size = 4;
 static const int ram_size = 16;
 
 // Number of frames
-//static const unsigned long nPages = int((ram_size * pow(2, 30))/(4 * pow(2,10)));
-static const unsigned long nPages = 400000;
+static const unsigned long nPages = long((ram_size * pow(2, 30))/(4 * pow(2,10)));
+//static const unsigned long nPages = 400000;
 
 // Size after which to move nodes from inactive queue to free queue
 static const unsigned long moveSize = long(nPages* 0.05);
 
-// Timestamp datastructure
-typedef unsigned long long timestamp_t;
-
-// function to return timestamp
-static timestamp_t get_timestamp(){
-    struct timeval now;
-    gettimeofday(&now, NULL);
-    return  now.tv_usec + (timestamp_t)now.tv_sec * 1000000;
-}
-
 // Empty structure for page frame
 struct page_t {
-    char s;
+    bool s;
 };
 
 // List which stores pages in UVM 
@@ -167,7 +159,7 @@ void BSDStructure::addActive(const int n) {
     if(this->freeQueue.size < moveSize){
         // Check if inactive list has nodes
         if(inactiveQueue.size > 2){
-            std::cout<<"\nReallocating from Inactive list to Free list";
+            //std::cout<<"\nReallocating from Inactive list to Free list";
             // Leave one page in inactive list just in case
             addFree(removeInactive(this->inactiveQueue.size - 1));
         }
@@ -218,66 +210,92 @@ std::vector<page_t *> BSDStructure::removeFree(const int n){
     return tp;
 }
 
+// Avgs a double vector
+double avg(std::vector<double> d){
+    double sum = 0;
+
+    for(int i=0; i<d.size();i++){
+        sum += d[i];
+    }
+
+    if(d.size() > 0)
+        return sum/(float)d.size();
+    return 0;
+}
 
 int main() {
-    // Declare mockup of ram memory
+
+    std::vector<double> initTime, free1Time, free2Time, allocate1Time, allocate2Time;
     std::vector<page_t> memory(nPages);
-    BSDStructure B;
-    
-    timestamp_t initStart = get_timestamp();
-    // init free list
-    for(unsigned long i =0; i<nPages; i++){
-        std::vector<page_t *> tp(1);
-        tp[0] = &memory[i];
-        B.addFree(tp);
+    for(int outerI=0;outerI<25;outerI++){
+        // Declare mockup of ram memory
+        BSDStructure B;
+        ptime initStart, initStop, allocate1Start, allocate1Stop, allocate2Start, allocate2Stop, free1Start, free1Stop, free2Start, free2Stop;
+        //timestamp_t initStart = get_timestamp();
+
+        initStart = microsec_clock::universal_time();
+        // init free list
+        for(unsigned long i =0; i<nPages; i++){
+            std::vector<page_t *> tp(1);
+            tp[0] = &memory[i];
+            B.addFree(tp);
+        }
+        initStop = microsec_clock::universal_time();
+
+        //std::cout<<"Free Queue size: "<<B.freeSize()<<"\n nPages: "<<nPages;
+
+        // Set random operations
+        std::random_device rd; // obtain a random number from hardware
+        std::mt19937 eng(rd()); // seed the generator
+        std::uniform_int_distribution<> distr(2, 1000); // define the range
+
+        allocate1Start = microsec_clock::universal_time(); 
+        // Allocate 3/4th memory in random size amounts
+        while(B.activeSize() < 0.75*nPages){
+            const int step = int(distr(eng));
+            //std::cout<<"\nStep :"<<step;
+            B.addActive(step);
+        }
+        allocate1Stop = microsec_clock::universal_time();
+
+        free1Start =  microsec_clock::universal_time(); 
+        // Free down to 1/2 of memory
+        B.removeActive(nPages/4);
+        free1Stop = microsec_clock::universal_time(); 
+
+        allocate2Start = microsec_clock::universal_time();
+        // Randomly allocate again upto 3/4 from 1/2
+        while(B.activeSize() < 0.75*nPages){
+            const int step = int(distr(eng));
+            //std::cout<<"\nStep :"<<step;
+            B.addActive(step);
+        }
+        allocate2Stop = microsec_clock::universal_time(); 
+
+        free2Start = microsec_clock::universal_time(); 
+        // Free all memory
+        B.removeActive(B.activeSize());
+        free2Stop = microsec_clock::universal_time(); 
+
+        boost::posix_time::time_duration initTimeD = -(initStart-initStop);
+        boost::posix_time::time_duration allocate1TimeD = -(allocate1Start - allocate1Stop);
+        boost::posix_time::time_duration allocate2TimeD = -(allocate2Start - allocate2Stop);
+        boost::posix_time::time_duration free1TimeD = -(free1Start - free1Stop);
+        boost::posix_time::time_duration free2TimeD = -(free2Start - free2Stop);
+        
+        initTime.push_back(initTimeD.total_nanoseconds());
+        allocate1Time.push_back(allocate1TimeD.total_nanoseconds());
+        allocate2Time.push_back(allocate2TimeD.total_nanoseconds());
+        free1Time.push_back(free1TimeD.total_nanoseconds());
+        free2Time.push_back(free2TimeD.total_nanoseconds());
     }
-    timestamp_t initStop = get_timestamp();
-
-    std::cout<<"Free Queue size: "<<B.freeSize()<<"\n nPages: "<<nPages;
-
-    // Set random operations
-    std::random_device rd; // obtain a random number from hardware
-    std::mt19937 eng(rd()); // seed the generator
-    std::uniform_int_distribution<> distr(2, 1000); // define the range
-
-    timestamp_t allocate1Start = get_timestamp();
-    // Allocate 3/4th memory in random size amounts
-    while(B.activeSize() < 0.75*nPages){
-        const int step = int(distr(eng));
-        //std::cout<<"\nStep :"<<step;
-        B.addActive(step);
-    }
-    timestamp_t allocate1Stop = get_timestamp();
-
-    timestamp_t free1Start = get_timestamp();
-    // Free down to 1/2 of memory
-    B.removeActive(nPages/2);
-    timestamp_t free1Stop = get_timestamp();
-
-    timestamp_t allocate2Start = get_timestamp();
-    // Randomly allocate again upto 3/4 from 1/2
-    while(B.activeSize() < 0.75*nPages){
-        const int step = int(distr(eng));
-        //std::cout<<"\nStep :"<<step;
-        B.addActive(step);
-    }
-    timestamp_t allocate2Stop = get_timestamp();
-
-    timestamp_t free2Start = get_timestamp();
-    // Free all memory
-    B.removeActive(B.activeSize());
-    timestamp_t free2Stop = get_timestamp();
-
-    double allocate1Time = (allocate1Start - allocate1Stop)/ 1000000.0L;
-    double allocate2Time = (allocate2Start - allocate2Stop)/ 1000000.0L;
-    double free1Time = (free1Start - free1Stop)/ 1000000.0L;
-    double free2Time = (free2Start - free2Stop)/ 1000000.0L;
     std::cout<<"\nTime Taken";
     std::cout<<"\n----------";
-    std::cout<<"\nAllocating 3/4th memory: "<<allocate1Time;
-    std::cout<<"\nAllocating from 1/2 memory to 3/4th memory: "<<allocate2Time;
-    std::cout<<"\nFreeing memory from 3/4 memory to 1/2: "<<free1Time;
-    std::cout<<"\nFreeing memory from 3/4 memory to empty: "<<free2Time<<std::endl;
+    std::cout<<"\nInit time: "<<avg(initTime);
+    std::cout<<"\nAllocating 3/4th memory: "<<avg(allocate1Time);
+    std::cout<<"\nAllocating from 1/2 memory to 3/4th memory: "<<avg(allocate2Time);
+    std::cout<<"\nFreeing memory from 3/4 memory to 1/2: "<<avg(free1Time);
+    std::cout<<"\nFreeing memory from 3/4 memory to empty: "<<avg(free2Time)<<std::endl;
 
 }
 

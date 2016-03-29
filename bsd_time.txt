@@ -1,0 +1,7 @@
+Time Taken
+----------
+Init time: 1.41577e+09
+Allocating 3/4th memory: 1.71357e+08
+Allocating from 1/2 memory to 3/4th memory: 1.24055e+08
+Freeing memory from 3/4 memory to 1/2: 5.64231e+07
+Freeing memory from 3/4 memory to empty: 1.68305e+08
