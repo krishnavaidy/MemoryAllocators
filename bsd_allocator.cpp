@@ -229,8 +229,7 @@ int main() {
 
     // Allocate 3/4th memory in random size amounts
     while(B.activeSize() < 0.75*nPages){
-        //const int step = int(distr(eng));
-        const int step = 100;
+        const int step = int(distr(eng));
         //std::cout<<"\nStep :"<<step;
         B.addActive(step);
     }
