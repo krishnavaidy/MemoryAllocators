@@ -3,6 +3,7 @@
 #include<cstdlib>
 #include "random"
 #include "math.h"
+#include<sys/time.h>
 
 // Sets page size in KB
 static const int page_size = 4;
@@ -17,8 +18,17 @@ static const unsigned long nPages = 400000;
 // Size after which to move nodes from inactive queue to free queue
 static const unsigned long moveSize = long(nPages* 0.05);
 
-// Object to mock page frames
-// Each page is of size 8KB
+// Timestamp datastructure
+typedef unsigned long long timestamp_t;
+
+// function to return timestamp
+static timestamp_t get_timestamp(){
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    return  now.tv_usec + (timestamp_t)now.tv_sec * 1000000;
+}
+
+// Empty structure for page frame
 struct page_t {
     char s;
 };
@@ -157,7 +167,7 @@ void BSDStructure::addActive(const int n) {
     if(this->freeQueue.size < moveSize){
         // Check if inactive list has nodes
         if(inactiveQueue.size > 2){
-            std::cout<<"Reallocating from Inactive list to Free list";
+            std::cout<<"\nReallocating from Inactive list to Free list";
             // Leave one page in inactive list just in case
             addFree(removeInactive(this->inactiveQueue.size - 1));
         }
@@ -213,13 +223,16 @@ int main() {
     // Declare mockup of ram memory
     std::vector<page_t> memory(nPages);
     BSDStructure B;
-
+    
+    timestamp_t initStart = get_timestamp();
     // init free list
     for(unsigned long i =0; i<nPages; i++){
         std::vector<page_t *> tp(1);
         tp[0] = &memory[i];
         B.addFree(tp);
     }
+    timestamp_t initStop = get_timestamp();
+
     std::cout<<"Free Queue size: "<<B.freeSize()<<"\n nPages: "<<nPages;
 
     // Set random operations
@@ -227,14 +240,44 @@ int main() {
     std::mt19937 eng(rd()); // seed the generator
     std::uniform_int_distribution<> distr(2, 1000); // define the range
 
+    timestamp_t allocate1Start = get_timestamp();
     // Allocate 3/4th memory in random size amounts
     while(B.activeSize() < 0.75*nPages){
         const int step = int(distr(eng));
         //std::cout<<"\nStep :"<<step;
         B.addActive(step);
     }
+    timestamp_t allocate1Stop = get_timestamp();
 
+    timestamp_t free1Start = get_timestamp();
     // Free down to 1/2 of memory
     B.removeActive(nPages/2);
+    timestamp_t free1Stop = get_timestamp();
+
+    timestamp_t allocate2Start = get_timestamp();
+    // Randomly allocate again upto 3/4 from 1/2
+    while(B.activeSize() < 0.75*nPages){
+        const int step = int(distr(eng));
+        //std::cout<<"\nStep :"<<step;
+        B.addActive(step);
+    }
+    timestamp_t allocate2Stop = get_timestamp();
+
+    timestamp_t free2Start = get_timestamp();
+    // Free all memory
+    B.removeActive(B.activeSize());
+    timestamp_t free2Stop = get_timestamp();
+
+    double allocate1Time = (allocate1Start - allocate1Stop)/ 1000000.0L;
+    double allocate2Time = (allocate2Start - allocate2Stop)/ 1000000.0L;
+    double free1Time = (free1Start - free1Stop)/ 1000000.0L;
+    double free2Time = (free2Start - free2Stop)/ 1000000.0L;
+    std::cout<<"\nTime Taken";
+    std::cout<<"\n----------";
+    std::cout<<"\nAllocating 3/4th memory: "<<allocate1Time;
+    std::cout<<"\nAllocating from 1/2 memory to 3/4th memory: "<<allocate2Time;
+    std::cout<<"\nFreeing memory from 3/4 memory to 1/2: "<<free1Time;
+    std::cout<<"\nFreeing memory from 3/4 memory to empty: "<<free2Time<<std::endl;
+
 }
 
