@@ -1,8 +1,8 @@
 #include <iostream>
 #include <vector>
-#include "types.h"
-#include "list.h"
-#include "helper.h"
+#include "linux_helper/types.h"
+#include "linux_helper/list.h"
+#include "linux_helper/helper.h"
 
 #include <cstdlib>
 #include "random"
@@ -63,51 +63,51 @@ Buddy::Buddy(struct page* mem_map) {
 };
 
 struct page * Buddy::alloc_pages(const unsigned int order) {
-	struct free_area * area;
-	unsigned int current_order;
-	struct page *page;
-	for (current_order = order; current_order < MAX_ORDER;
-       ++current_order) {
-		area = &free_area[current_order];
-		if (list_empty(&area->free_list))
-			continue;
-		//Get first page of the free_list
-		page = list_entry(area->free_list.next, struct page, lru);
-		list_del(&page->lru);
+  struct free_area * area;
+  unsigned int current_order;
+  struct page *page;
+  for (current_order = order; current_order < MAX_ORDER;
+    ++current_order) {
+    area = &free_area[current_order];
+    if (list_empty(&area->free_list))
+        continue;
+    //Get first page of the free_list
+    page = list_entry(area->free_list.next, struct page, lru);
+    list_del(&page->lru);
     set_page_order(page, 0);
-		// area->nr_free--;
-		expand(page, order, current_order, area);
-		return page;
-	}
-	return NULL;
+    // area->nr_free--;
+    expand(page, order, current_order, area);
+    return page;
+  }
+  return NULL;
 }
 
 void Buddy::free_pages(struct page *page, unsigned int order) {
-	unsigned long buddy_idx;
+  unsigned long buddy_idx;
   unsigned long page_idx;
-	page_idx = page_to_pfn(page) & ((1 << MAX_ORDER) - 1); // ?? very confusing
-	while (order < MAX_ORDER-1) {
-		unsigned long combined_idx;
-		// struct free_area * area;
-		struct page *buddy;
+  page_idx = page_to_pfn(page) & ((1 << MAX_ORDER) - 1); // ?? very confusing
+  while (order < MAX_ORDER-1) {
+    unsigned long combined_idx;
+    // struct free_area * area;
+    struct page *buddy;
     buddy_idx = __find_buddy_index(page_idx, order);
-		buddy = page + ((page_idx^(1<<order))-page_idx);
-		if (!page_is_buddy(buddy, order))
-			break;		/* Move the buddy up one level. */
-		list_del(&buddy->lru);
-		// area = &free_area[order];
-		// area->nr_free--;
-		rmv_page_order(buddy);
-		// get page_idx after combining
+    buddy = page + ((page_idx^(1<<order))-page_idx);
+    if (!page_is_buddy(buddy, order))
+        break;      /* Move the buddy up one level. */
+    list_del(&buddy->lru);
+    // area = &free_area[order];
+    // area->nr_free--;
+    rmv_page_order(buddy);
+    // get page_idx after combining
     combined_idx = buddy_idx & page_idx;
-		// get first page after combining
-		page = page + (combined_idx - page_idx);
-		page_idx = combined_idx;
-		order++;
-	}
-	set_page_order(page, order);
-	list_add(&page->lru, &free_area[order].free_list);
-	// free_area[order].nr_free++;
+    // get first page after combining
+    page = page + (combined_idx - page_idx);
+    page_idx = combined_idx;
+    order++;
+  }
+  set_page_order(page, order);
+  list_add(&page->lru, &free_area[order].free_list);
+  // free_area[order].nr_free++;
 }
 
 // Avgs a double vector
