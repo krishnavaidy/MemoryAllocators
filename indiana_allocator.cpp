@@ -483,8 +483,8 @@ int main() {
         free2Time.push_back(free2TimeD.total_nanoseconds());
  
     }
-    std::cout<<"\nTime Taken";
-    std::cout<<"\n----------";
+    std::cout<<"\nTime Taken for Indiana";
+    std::cout<<"\n----------------------";
     std::cout<<"\nInit time: "<<avg(initTime);
     std::cout<<"\nAllocating 3/4th memory: "<<avg(allocate1Time);
     std::cout<<"\nAllocating from 1/2 memory to 3/4th memory: "<<avg(allocate2Time);

@@ -276,20 +276,20 @@ int main() {
         B.removeActive(B.activeSize());
         free2Stop = microsec_clock::universal_time(); 
 
-        boost::posix_time::time_duration inittimed = -(initstart-initstop);
-        boost::posix_time::time_duration allocate1timed = -(allocate1start - allocate1stop);
-        boost::posix_time::time_duration allocate2timed = -(allocate2start - allocate2stop);
-        boost::posix_time::time_duration free1timed = -(free1start - free1stop);
-        boost::posix_time::time_duration free2timed = -(free2start - free2stop);
+        boost::posix_time::time_duration initTimeD = -(initStart-initStop);
+        boost::posix_time::time_duration allocate1TimeD = -(allocate1Start - allocate1Stop);
+        boost::posix_time::time_duration allocate2TimeD = -(allocate2Start - allocate2Stop);
+        boost::posix_time::time_duration free1TimeD = -(free1Start - free1Stop);
+        boost::posix_time::time_duration free2TimeD = -(free2Start - free2Stop);
         
-        inittime.push_back(inittimed.total_nanoseconds());
-        allocate1time.push_back(allocate1timed.total_nanoseconds());
-        allocate2time.push_back(allocate2timed.total_nanoseconds());
-        free1time.push_back(free1timed.total_nanoseconds());
-        free2time.push_back(free2timed.total_nanoseconds());
+        initTime.push_back(initTimeD.total_nanoseconds());
+        allocate1Time.push_back(allocate1TimeD.total_nanoseconds());
+        allocate2Time.push_back(allocate2TimeD.total_nanoseconds());
+        free1Time.push_back(free1TimeD.total_nanoseconds());
+        free2Time.push_back(free2TimeD.total_nanoseconds());
     }
-    std::cout<<"\nTime Taken";
-    std::cout<<"\n----------";
+    std::cout<<"\nTime Taken for BSD";
+    std::cout<<"\n------------------";
     std::cout<<"\nInit time: "<<avg(initTime);
     std::cout<<"\nAllocating 3/4th memory: "<<avg(allocate1Time);
     std::cout<<"\nAllocating from 1/2 memory to 3/4th memory: "<<avg(allocate2Time);

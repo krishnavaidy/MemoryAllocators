@@ -1,7 +1,21 @@
-SOURCE=bsd_allocator.cpp
+BSD_SOURCE=bsd_allocator.cpp
+       
+INDIANA_SOURCE=indiana_allocator.cpp
 
-TARGETS=bsd_allocator
+OUTPUT=output.txt
 
-all:
-	g++ -std=c++11 $(SOURCE) -o bsd
+B_TARGET=bsd
 
+I_TARGET=indiana
+
+all: bsd indiana
+
+indiana: 
+	g++ -std=c++11 -o $(I_TARGET) $(INDIANA_SOURCE) 
+
+bsd: 
+	g++ -std=c++11 -o $(B_TARGET) $(BSD_SOURCE) 
+
+run:
+	./$(B_TARGET) &> $(OUTPUT)
+	./$(I_TARGET) >> $(OUTPUT)
