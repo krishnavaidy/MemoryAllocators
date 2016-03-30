@@ -1,7 +1,7 @@
-# Memory allocation 
-Tests performance of memory allocators in OpenIndiana and NetBSD
+# Memory allocation
+Tests performance of memory allocators in OpenIndiana, NetBSD and Linux
 
-# Compile 
+# Compile
 make all
 
 # Run
