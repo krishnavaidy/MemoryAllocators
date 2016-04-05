@@ -15,29 +15,24 @@ static const int pageSize = 4;
 static const int ramSize = 16;
 
 // Number of frames
-static const unsigned long nPages = long((ramSize * pow(2, 30))/(4 * pow(2,10)));
+static uint64_t nPages = ((ramSize * pow(2, 30))/(4 * pow(2,10)));
 //static const unsigned long nPages = 
 
 // Size after which to move nodes from inactive queue to free queue
-static const unsigned long moveSize = long(nPages* 0.05);
-
-// Empty structure for page frame
-struct page_t {
-    bool s;
-};
+static uint64_t moveSize = long(nPages* 0.05);
 
 // Frame size
-static const int frameSize = sizeof(struct page_t);
+//static const int frameSize = sizeof(struct page_t);
 
 // Memseg datastructure
 struct memseg {
-    page_t * pages;
-    page_t * epages;
+    uint64_t pages;
+    uint64_t epages;
     struct memseg * next;
     struct memseg * lnext;
     memseg(){
-        pages = NULL;
-        epages = NULL;
+        pages = -1;
+        epages = -1;
         next = NULL;
         lnext = NULL;
     }
@@ -48,11 +43,11 @@ static const int memsegSize = sizeof(struct memseg);
 
 // struct to store page address used in mock-up for active list
 struct node {
-    page_t *page_address;
+    uint64_t page_address;
     struct node* next;
     node() {
         next = NULL;
-        page_address = NULL;
+        page_address = -1;
     }
 };
 
@@ -85,7 +80,7 @@ class Queue {
         }
 
         // Add elements to queue, given a node
-        void enqueue(page_t * tmp) {
+        void enqueue(uint64_t tmp) {
             struct node * tmpNode = new struct node();
             tmpNode->page_address = tmp;
 
@@ -105,7 +100,7 @@ class Queue {
         }
 
         // Remove element from queue
-        page_t * dequeue() {
+        uint64_t dequeue() {
             
             // Check for empty queue condition
             if(this->head == NULL){
@@ -133,7 +128,7 @@ class Queue {
                 return tmp->page_address;
             else{
                 std::cout<<"Page element dequeued is NULL";
-                return NULL;
+                return -1;
             }
         }
 
@@ -164,7 +159,7 @@ class MemsegQueue {
     }
 
     // Add elements to queue, given a node
-    void enqueue(page_t * pages, page_t * epages) {
+    void enqueue(uint64_t pages, uint64_t epages) {
         struct memseg* tmpNode = new struct memseg();
         tmpNode->pages = pages;
         tmpNode->epages = epages;
@@ -181,7 +176,7 @@ class MemsegQueue {
         }
 
         // Increment size
-        this->size += (epages - pages + frameSize)/frameSize;
+        this->size += epages - pages;
     }
 
     // Remove element from queue
@@ -217,11 +212,11 @@ class MemsegQueue {
         }
     }
     friend class IndianaStructure;
-    /*friend void addFreeQ(MemsegQueue freeQ, page_t * page);*/
-    //friend std::vector<page_t *> removeFreeQ(MemsegQueue freeQ, const int n);
+    /*friend void addFreeQ(MemsegQueue freeQ, uint64_t * page);*/
+    //friend std::vector<uint64_t *> removeFreeQ(MemsegQueue freeQ, const int n);
 
-    //friend void addInactiveQ(MemsegQueue inactiveQ, page_t * page);
-    //friend std::vector<page_t *> removeInactiveQ(MemsegQueue inactiveQ, const int n);
+    //friend void addInactiveQ(MemsegQueue inactiveQ, uint64_t * page);
+    //friend std::vector<uint64_t *> removeInactiveQ(MemsegQueue inactiveQ, const int n);
 };
 
 // Avgs a double vecor
@@ -233,7 +228,7 @@ double avg(std::vector<double> d){
     }
 
     if(d.size() > 0)
-        return sum/(float)d.size();
+        return sum/(double)d.size();
     return 0;
 }
 class IndianaStructure{
@@ -254,27 +249,27 @@ class IndianaStructure{
             return freeQ.size;
         }
 
-        void addActiveQ(const int n);
-        void removeActiveQ(const int n);
+        void addActiveQ(const uint64_t n);
+        void removeActiveQ(const uint64_t n);
 
-        void initFreeQ(page_t *page, page_t *epage) {
+        void initFreeQ(uint64_t page, uint64_t epage) {
             freeQ.enqueue(page, epage);
         }
-        void addFreeQ(page_t * page);
-        std::vector<page_t *> removeFreeQ(const int n);
+        void addFreeQ(const uint64_t page);
+        std::vector<uint64_t> removeFreeQ(uint64_t n);
 
-        void addInactiveQ(page_t * page);
-        std::vector<page_t *> removeInactiveQ(const int n);
+        void addInactiveQ(const uint64_t page);
+        std::vector<uint64_t> removeInactiveQ(uint64_t n);
 };
 
-void IndianaStructure::addActiveQ(const int n) {
+void IndianaStructure::addActiveQ(const uint64_t n) {
     // Check if freeQ has enough meory to allocate n pages to activeQ
     if(n > freeQ.size){
         cout<<"\nNot enough memory in FreeQ"<<"\n n: "<<n<<"\n free queue size: "<<freeQ.size;
         exit(EXIT_FAILURE);
     }
     // Get n pages from freeQ
-    std::vector<page_t *> freePages = removeFreeQ(n);
+    std::vector<uint64_t> freePages = removeFreeQ(n);
     //cout<<"\nRemoved from freeQ successfully";
 
     // Add to activeQ
@@ -288,7 +283,7 @@ void IndianaStructure::addActiveQ(const int n) {
      *    //cout<<"\n Reallocating from inactiveQ to freeQ";
      *    // Check if inactiveQ is nonempty
      *    if(inactiveQ.size >2){
-     *        std::vector<page_t *> removedPages = removeInactiveQ(inactiveQ, inactiveQ.size -1);
+     *        std::vector<uint64_t *> removedPages = removeInactiveQ(inactiveQ, inactiveQ.size -1);
      *        for(int i=0; i<removedPages.size(); i++){
      *            addFreeQ(freeQ, removedPages[i]);
      *        }
@@ -297,7 +292,7 @@ void IndianaStructure::addActiveQ(const int n) {
      */
 }
 
-void IndianaStructure::removeActiveQ(const int n){
+void IndianaStructure::removeActiveQ(const uint64_t n){
     for(int i=0; i<n; i++){
         if(this->activeQ.isempty()){
             break;
@@ -306,15 +301,15 @@ void IndianaStructure::removeActiveQ(const int n){
     }
 }
 
-void IndianaStructure::addInactiveQ(page_t * page){
+void IndianaStructure::addInactiveQ(uint64_t page){
     struct memseg * tmp = inactiveQ.head;
     do{
-        if( (tmp->pages - frameSize) == page){
+        if( (tmp->pages - 1) == page){
             tmp->pages = page;
             this->inactiveQ.size++;
             return;
         }
-        else if ( (tmp->epages + frameSize) == page){
+        else if ( (tmp->epages + 1) == page){
             tmp->epages = page;
             this->inactiveQ.size++;
             return;
@@ -331,15 +326,15 @@ void IndianaStructure::addInactiveQ(page_t * page){
     this->inactiveQ.size++;
 }
 
-void IndianaStructure::addFreeQ(page_t * page){
+void IndianaStructure::addFreeQ(uint64_t page){
     struct memseg * tmp = this->freeQ.head;
     do{
-        if((tmp->pages - frameSize) == page){
+        if((tmp->pages - 1) == page){
             tmp->pages = page;
             this->freeQ.size++;
             return;
         }
-        else if((tmp->epages + frameSize) == page){
+        else if((tmp->epages + 1) == page){
             tmp->epages = page;
             this->freeQ.size++;
             return;
@@ -362,16 +357,16 @@ int min(const int x, const int y){
     return y;
 }
 
-std::vector<page_t *> IndianaStructure::removeFreeQ(int n){
-    std::vector<page_t *> removedPages;
+std::vector<uint64_t>  IndianaStructure::removeFreeQ(uint64_t n){
+    std::vector<uint64_t> removedPages;
     memseg * tp = freeQ.head;
     // Flag to check if current memseg under operation is empty or not
     bool segEmpty = false;
     while(n > 0){
-        const int blockLength = (tp->epages - tp->pages)/frameSize;
+        const int blockLength = (tp->epages - tp->pages);
         // Allocate memory from freeQ
         for(int i=0; i<min(n,blockLength);i++){
-            removedPages.push_back(tp->pages + frameSize*i);
+            removedPages.push_back(tp->pages + i);
         }
         if(n >= blockLength){
             freeQ.head = tp->next;
@@ -390,16 +385,16 @@ std::vector<page_t *> IndianaStructure::removeFreeQ(int n){
     return removedPages;
 }
 
-std::vector<page_t *> IndianaStructure::removeInactiveQ(int n){
-    std::vector<page_t *> removedPages;
+std::vector<uint64_t> IndianaStructure::removeInactiveQ(uint64_t n){
+    std::vector<uint64_t> removedPages;
     memseg * tp = inactiveQ.head;
     // Flag to check if current memseg under operation is empty or not
     bool segEmpty = false;
     while(n > 0){
-        const int blockLength = (tp->epages - tp->pages)/frameSize;
+        const int blockLength = (tp->epages - tp->pages);
         // Allocate memory from freeQ
         for(int i=0; i<min(n,blockLength);i++){
-            removedPages.push_back(tp->pages + frameSize*i);
+            removedPages.push_back(tp->pages + i);
         }
         if(n >= blockLength){
             inactiveQ.head = tp->next;
@@ -417,9 +412,9 @@ int main() {
 
     std::vector<double> initTime, free1Time, free2Time, allocate1Time, allocate2Time;
     // Memory 
-    std::vector<page_t> memory(nPages);
+    //std::vector<uint64_t> memory(nPages);
 
-    for(int outerI=0;outerI<1;outerI++){
+    for(int outerI=0;outerI<25;outerI++){
         // Timestamps
         ptime initStart, initStop, allocate1Start, allocate1Stop, allocate2Start, allocate2Stop, free1Start, free1Stop, free2Start, free2Stop;
         // Queues 
@@ -429,10 +424,10 @@ int main() {
 
         initStart = microsec_clock::universal_time();
         // init free memory
-        I.initFreeQ(&memory[0], &memory[nPages-1]);
+        I.initFreeQ(0, nPages -1);
         initStop = microsec_clock::universal_time();
 
-        cout<<"\nFreeQ size: "<<I.sizeFreeQ();
+        //cout<<"\nFreeQ size: "<<I.sizeFreeQ();
 
         // Set random operations
         std::random_device rd; // obtain a random number from hardware

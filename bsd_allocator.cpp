@@ -14,20 +14,14 @@ static const int page_size = 4;
 static const int ram_size = 16;
 
 // Number of frames
-static const unsigned long nPages = long((ram_size * pow(2, 30))/(4 * pow(2,10)));
-//static const unsigned long nPages = 400000;
+static const uint64_t nPages = ((ram_size * pow(2, 30))/(4 * pow(2,10)));
 
 // Size after which to move nodes from inactive queue to free queue
-static const unsigned long moveSize = long(nPages* 0.05);
-
-// Empty structure for page frame
-struct page_t {
-    bool s;
-};
+static const uint64_t moveSize = (nPages* 0.05);
 
 // List which stores pages in UVM 
 struct node {
-    page_t *page_address;
+    uint64_t page_address;
     struct node* next;
     node() {
         next = NULL;
@@ -42,7 +36,7 @@ class Queue {
         struct node* tail;
 
     public:
-        long size;
+        uint64_t size;
         Queue() {
             this->head = NULL;
             this->tail = NULL;
@@ -58,7 +52,7 @@ class Queue {
         }
 
         // Add elements to queue, given a node
-        void enqueue(page_t * tmp) {
+        void enqueue(uint64_t tmp) {
             struct node * tmpNode = new struct node();
             tmpNode->page_address = tmp;
 
@@ -78,7 +72,7 @@ class Queue {
         }
 
         // Remove element from queue
-        page_t * dequeue() {
+        uint64_t dequeue() {
             
             // Check for empty queue condition
             if(this->head == NULL){
@@ -106,7 +100,7 @@ class Queue {
                 return tmp->page_address;
             else{
                 std::cout<<"Page element dequeued is NULL";
-                return NULL;
+                return 0;
             }
         }
 };
@@ -117,15 +111,15 @@ class BSDStructure {
         Queue activeQueue, inactiveQueue, freeQueue;
 
     public:
-        unsigned long freeSize(){
+        uint64_t freeSize(){
             return freeQueue.size;
         }
 
-        unsigned long activeSize(){
+        uint64_t activeSize(){
             return activeQueue.size;
         }
 
-        unsigned long inactiveSize(){
+        uint64_t inactiveSize(){
             return inactiveQueue.size;
         }
 
@@ -134,12 +128,12 @@ class BSDStructure {
         void removeActive(const int n);
 
         // Free queue operations
-        void addFree(std::vector<page_t *> pageLocation);
-        std::vector<page_t *> removeFree(const int n);
+        void addFree(std::vector<uint64_t> pageLocation);
+        std::vector<uint64_t> removeFree(const int n);
 
         // Inactive queue operations
-        void addInactive(std::vector<page_t *> pageLocation);
-        std::vector<page_t *> removeInactive(const int n);
+        void addInactive(std::vector<uint64_t> pageLocation);
+        std::vector<uint64_t> removeInactive(const int n);
 };
 
 // Takes page from free list and adds to active list
@@ -177,15 +171,15 @@ void BSDStructure::removeActive(const int n){
 }
 
 // Takes page and adds to inactive queue
-void BSDStructure::addInactive(std::vector<page_t *> pageLocation){
+void BSDStructure::addInactive(std::vector<uint64_t> pageLocation){
     for(int i=0;i<pageLocation.size();i++){
         this->inactiveQueue.enqueue(pageLocation[i]);
     }
 }
 
 // Removes page from inactive list
-std::vector<page_t *> BSDStructure::removeInactive(const int n){
-    std::vector<page_t *> tp(n);
+std::vector<uint64_t> BSDStructure::removeInactive(const int n){
+    std::vector<uint64_t> tp(n);
     for(int i=0;i<n;i++){
         tp[i] = this->inactiveQueue.dequeue();
     }
@@ -194,15 +188,15 @@ std::vector<page_t *> BSDStructure::removeInactive(const int n){
 }
 
 // Takes page and adds to free list
-void BSDStructure::addFree(std::vector<page_t *> pageLocation){
+void BSDStructure::addFree(std::vector<uint64_t> pageLocation){
     for(int i=0;i<pageLocation.size();i++){
         this->freeQueue.enqueue(pageLocation[i]);
     }
 }
 
 // Removes page from free list
-std::vector<page_t *> BSDStructure::removeFree(const int n){
-    std::vector<page_t *> tp(n);
+std::vector<uint64_t> BSDStructure::removeFree(const int n){
+    std::vector<uint64_t> tp(n);
     for(int i=0;i<n;i++){
         tp[i] = this->freeQueue.dequeue();
     }
@@ -226,19 +220,19 @@ double avg(std::vector<double> d){
 int main() {
 
     std::vector<double> initTime, free1Time, free2Time, allocate1Time, allocate2Time;
-    std::vector<page_t> memory(nPages);
+    //std::vector<uint64_t> memory(nPages);
     for(int outerI=0;outerI<25;outerI++){
         // Declare mockup of ram memory
         BSDStructure B;
         ptime initStart, initStop, allocate1Start, allocate1Stop, allocate2Start, allocate2Stop, free1Start, free1Stop, free2Start, free2Stop;
 
-        initStart = microsec_clock::universal_time();
         // init free list
-        for(unsigned long i =0; i<nPages; i++){
-            std::vector<page_t *> tp(1);
-            tp[0] = &memory[i];
-            B.addFree(tp);
+        std::vector<uint64_t> tp;
+        for(uint64_t i =0; i<nPages; i++){
+            tp.push_back(i);
         }
+        initStart = microsec_clock::universal_time();
+        B.addFree(tp);
         initStop = microsec_clock::universal_time();
 
         //std::cout<<"Free Queue size: "<<B.freeSize()<<"\n nPages: "<<nPages;
