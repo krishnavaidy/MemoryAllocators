@@ -27,3 +27,8 @@ run:
 	./$(B_TARGET) &> $(OUTPUT)
 	./$(I_TARGET) >> $(OUTPUT)
 	./$(L_TARGET) >> $(OUTPUT)
+
+clean: 
+	rm $(B_TARGET)
+	rm $(I_TARGET)
+	rm $(L_TARGET)
