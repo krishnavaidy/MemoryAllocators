@@ -414,7 +414,7 @@ int main() {
     // Memory 
     //std::vector<uint64_t> memory(nPages);
 
-    for(int outerI=0;outerI<25;outerI++){
+    for(int outerI=0;outerI<10;outerI++){
         // Timestamps
         ptime initStart, initStop, allocate1Start, allocate1Stop, allocate2Start, allocate2Stop, free1Start, free1Stop, free2Start, free2Stop;
         // Queues 

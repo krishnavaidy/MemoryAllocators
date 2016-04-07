@@ -1,25 +1,24 @@
 
 Time Taken - BSD (ns)
 ---------------------
-Init time: 1.42465e+09
-Allocating 3/4th memory: 1.74067e+08
-Allocating from 1/2 memory to 3/4th memory: 1.34879e+08
-Freeing memory from 3/4 memory to 1/2: 5.72109e+07
-Freeing memory from 3/4 memory to empty: 1.73354e+08
+Init time: 2.30778e+08
+Allocating 3/4th memory: 1.65952e+08
+Allocating from 1/2 memory to 3/4th memory: 1.20547e+08
+Freeing memory from 3/4 memory to 1/2: 5.40311e+07
+Freeing memory from 3/4 memory to empty: 1.6288e+08
 
-FreeQ size: 4194304
 Time Taken - OpenIndiana (ns)
 -----------------------------
-Init time: 72000
-Allocating 3/4th memory: 2.80335e+08
-Allocating from 1/2 memory to 3/4th memory: 9.6222e+07
-Freeing memory from 3/4 memory to 1/2: 4.3057e+09
-Freeing memory from 3/4 memory to empty: 6.43821e+10
+Init time: 7700
+Allocating 3/4th memory: 2.70566e+08
+Allocating from 1/2 memory to 3/4th memory: 9.00715e+07
+Freeing memory from 3/4 memory to 1/2: 4.40839e+09
+Freeing memory from 3/4 memory to empty: 6.38549e+10
 
 Time Taken - Linux (ns)
 -----------------------
-Init time: 2.94433e+08
-Allocating 3/4th memory: 2.999e+06
-Allocating from 1/2 memory to 3/4th memory: 1.046e+06
-Freeing memory from 3/4 memory to 1/2: 497000
-Freeing memory from 3/4 memory to empty: 1.963e+06
+Init time: 3.10628e+08
+Allocating 3/4th memory: 2.971e+06
+Allocating from 1/2 memory to 3/4th memory: 1.061e+06
+Freeing memory from 3/4 memory to 1/2: 502000
+Freeing memory from 3/4 memory to empty: 2.067e+06
