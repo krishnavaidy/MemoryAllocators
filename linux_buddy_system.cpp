@@ -56,9 +56,10 @@ Buddy::Buddy(struct page* mem_map) {
     // init empty list
     INIT_LIST_HEAD(&free_area[order].free_list);
   }
-  for (pfn = 0; pfn < nPages; pfn++) {
+  for (pfn = 0; pfn < nPages; pfn += 64) {
     page = &mem_map[pfn];
-    free_pages(page, 0);// add page to buddy system
+    free_pages(page, 6);// add page to buddy system
+                        // 2^6 = 64
   }
 };
 
