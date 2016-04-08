@@ -96,8 +96,11 @@ class Queue {
             this->size--;
 
             // Return deleted element from queue
-            if(tmp != NULL)
-                return tmp->page_address;
+            if(tmp != NULL){
+                uint64_t tp = tmp->page_address;
+                free(tmp);
+                return tp;
+            }
             else{
                 std::cout<<"Page element dequeued is NULL";
                 return 0;
@@ -150,23 +153,23 @@ void BSDStructure::addActive(const int n) {
         this->activeQueue.enqueue(this->freeQueue.dequeue());
     }
 
-    if(this->freeQueue.size < moveSize){
-        // Check if inactive list has nodes
-        if(inactiveQueue.size > 2){
-            //std::cout<<"\nReallocating from Inactive list to Free list";
-            // Leave one page in inactive list just in case
-            addFree(removeInactive(this->inactiveQueue.size - 1));
-        }
-        else{
-            std::cout<<"\nNo free memory in free queue";
-        }
-    }
+   /* if(this->freeQueue.size < moveSize){*/
+        //// Check if inactive list has nodes
+        //if(inactiveQueue.size > 2){
+            ////std::cout<<"\nReallocating from Inactive list to Free list";
+            //// Leave one page in inactive list just in case
+            //addFree(removeInactive(this->inactiveQueue.size - 1));
+        //}
+        //else{
+            //std::cout<<"\nNo free memory in free queue";
+        //}
+    /*}*/
 }
 
 // Removes page from active list and adds to inactive list
 void BSDStructure::removeActive(const int n){
     for(int i=0;i<n;i++){
-        this->inactiveQueue.enqueue(this->activeQueue.dequeue());
+        this->freeQueue.enqueue(this->activeQueue.dequeue());
     }
 }
 
