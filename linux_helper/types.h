@@ -17,7 +17,7 @@ struct page {
 
 struct free_area {
   struct list_head free_list;
-  unsigned long nr_free;
+  //unsigned long nr_free;
 };
 
 struct page *mem_map_base;

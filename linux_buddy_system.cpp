@@ -153,15 +153,16 @@ int main() {
       page = buddy.alloc_pages(porder);
       alloc_page_p.push_back(page);
       alloc_page_order.push_back(porder);
-      // cout << page << ": " << porder << endl;
     }
     allocate1Stop = microsec_clock::universal_time();
 
     free1Start =  microsec_clock::universal_time();
-    for (i=0; i<alloc_page_p.size() && psum > nPages/2; i++) {
-      int porder = alloc_page_order[i];
+    while (psum > nPages/2) {
+      int porder = alloc_page_order.back();
       psum -= 1 << porder;
-      buddy.free_pages(alloc_page_p[i], porder);
+      buddy.free_pages(alloc_page_p.back(), porder);
+      alloc_page_p.pop_back();
+      alloc_page_order.pop_back();
     }
     free1Stop = microsec_clock::universal_time();
 
@@ -173,12 +174,13 @@ int main() {
       page = buddy.alloc_pages(porder);
       alloc_page_p.push_back(page);
       alloc_page_order.push_back(porder);
-      // cout << page << ": " << porder << endl;
     }
     allocate2Stop = microsec_clock::universal_time();
     free2Start = microsec_clock::universal_time();
-    for (i=0; i<alloc_page_p.size(); i++) {
-      buddy.free_pages(alloc_page_p[i], alloc_page_order[i]);
+    while (alloc_page_p.size() > 0) {
+      buddy.free_pages(alloc_page_p.back(), alloc_page_order.back());
+      alloc_page_p.pop_back();
+      alloc_page_order.pop_back();
     }
     free2Stop = microsec_clock::universal_time();
 
