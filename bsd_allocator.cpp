@@ -240,15 +240,10 @@ int main() {
 
         //std::cout<<"Free Queue size: "<<B.freeSize()<<"\n nPages: "<<nPages;
 
-        // Set random operations
-        std::random_device rd; // obtain a random number from hardware
-        std::mt19937 eng(rd()); // seed the generator
-        std::uniform_int_distribution<> distr(2, 1000); // define the range
-
         allocate1Start = microsec_clock::universal_time(); 
         // Allocate 3/4th memory in random size amounts
         while(B.activeSize() < 0.75*nPages){
-            const int step = int(distr(eng));
+            const int step = 1;
             //std::cout<<"\nStep :"<<step;
             B.addActive(step);
         }
@@ -262,7 +257,7 @@ int main() {
         allocate2Start = microsec_clock::universal_time();
         // Randomly allocate again upto 3/4 from 1/2
         while(B.activeSize() < 0.75*nPages){
-            const int step = int(distr(eng));
+            const int step = 1; 
             //std::cout<<"\nStep :"<<step;
             B.addActive(step);
         }
@@ -288,8 +283,8 @@ int main() {
     std::cout<<"\nTime Taken - BSD (ns)";
     std::cout<<"\n---------------------";
     std::cout<<"\nInit time: "<<avg(initTime);
-    std::cout<<"\nAllocating 3/4th memory: "<<avg(allocate1Time);
-    std::cout<<"\nAllocating from 1/2 memory to 3/4th memory: "<<avg(allocate2Time);
+    std::cout<<"\nAvg time for allocating a single frame while allocating 3/4th memory: "<<avg(allocate1Time)/(0.75*nPages);
+    std::cout<<"\nAvg time for allocating a single frame while alllocating from 1/2 memory to 3/4th memory: "<<avg(allocate2Time)/(0.25*nPages);
     std::cout<<"\nFreeing memory from 3/4 memory to 1/2: "<<avg(free1Time);
     std::cout<<"\nFreeing memory from 3/4 memory to empty: "<<avg(free2Time)<<std::endl;
 
