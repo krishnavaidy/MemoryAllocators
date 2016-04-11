@@ -224,7 +224,7 @@ int main() {
 
     std::vector<double> initTime, free1Time, free2Time, allocate1Time, allocate2Time;
     //std::vector<uint64_t> memory(nPages);
-    for(int outerI=0;outerI<25;outerI++){
+    for(int outerI=0;outerI<1;outerI++){
         // Declare mockup of ram memory
         BSDStructure B;
         ptime initStart, initStop, allocate1Start, allocate1Stop, allocate2Start, allocate2Stop, free1Start, free1Stop, free2Start, free2Stop;

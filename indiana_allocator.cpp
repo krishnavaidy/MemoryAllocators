@@ -16,13 +16,9 @@ static const int ramSize = 16;
 
 // Number of frames
 static uint64_t nPages = ((ramSize * pow(2, 30))/(4 * pow(2,10)));
-//static const unsigned long nPages = 
 
 // Size after which to move nodes from inactive queue to free queue
 static uint64_t moveSize = long(nPages* 0.05);
-
-// Frame size
-//static const int frameSize = sizeof(struct page_t);
 
 // Memseg datastructure
 struct memseg {
@@ -124,17 +120,19 @@ class Queue {
             this->size--;
 
             // Return deleted element from queue
-            if(tmp != NULL)
-                return tmp->page_address;
+            if(tmp != NULL){
+                uint64_t tmp_page_address = tmp->page_address;
+                free(tmp);
+                return tmp_page_address;
+            }
             else{
                 std::cout<<"Page element dequeued is NULL";
+                free(tmp);
                 return -1;
             }
         }
 
         friend class IndianaStructure;
-        //friend void addActiveQ(Queue activeQ, MemsegQueue freeQ, const int n);
-        //friend void removeActiveQ(Queue activeQ, MemsegQueue freeQ, const int n);
 };
 
 class MemsegQueue {
@@ -204,19 +202,16 @@ class MemsegQueue {
         this->size--;
 
         // Return deleted element from queue
-        if(tmp != NULL)
-            return tmp;
+        if(tmp != NULL){
+            free(tmp);
+            return NULL;
+        }
         else{
             std::cout<<"Page element dequeued is NULL";
             return NULL;
         }
     }
     friend class IndianaStructure;
-    /*friend void addFreeQ(MemsegQueue freeQ, uint64_t * page);*/
-    //friend std::vector<uint64_t *> removeFreeQ(MemsegQueue freeQ, const int n);
-
-    //friend void addInactiveQ(MemsegQueue inactiveQ, uint64_t * page);
-    //friend std::vector<uint64_t *> removeInactiveQ(MemsegQueue inactiveQ, const int n);
 };
 
 // Avgs a double vecor
@@ -276,20 +271,6 @@ void IndianaStructure::addActiveQ(const uint64_t n) {
     for(int i=0; i<freePages.size();i++){
         this->activeQ.enqueue(freePages[i]);
     }
-
-    // Check if need to reallocate from inactiveQ to freeQ
-    /*
-     *if(freeQ.size < moveSize){
-     *    //cout<<"\n Reallocating from inactiveQ to freeQ";
-     *    // Check if inactiveQ is nonempty
-     *    if(inactiveQ.size >2){
-     *        std::vector<uint64_t *> removedPages = removeInactiveQ(inactiveQ, inactiveQ.size -1);
-     *        for(int i=0; i<removedPages.size(); i++){
-     *            addFreeQ(freeQ, removedPages[i]);
-     *        }
-     *    }
-     *}
-     */
 }
 
 void IndianaStructure::removeActiveQ(const uint64_t n){
@@ -303,21 +284,8 @@ void IndianaStructure::removeActiveQ(const uint64_t n){
 
 void IndianaStructure::addInactiveQ(uint64_t page){
     struct memseg * tmp = inactiveQ.head;
-    do{
-        if( (tmp->pages - 1) == page){
-            tmp->pages = page;
-            this->inactiveQ.size++;
-            return;
-        }
-        else if ( (tmp->epages + 1) == page){
-            tmp->epages = page;
-            this->inactiveQ.size++;
-            return;
-        }
-        tmp = tmp->next;
-    }while(tmp!=this->inactiveQ.tail && tmp !=NULL);
 
-    // When page is not contiguous to any existing blocks 
+    // Add page to head of list
     tmp = new memseg();
     tmp->pages = page;
     tmp->epages = page;
@@ -328,21 +296,8 @@ void IndianaStructure::addInactiveQ(uint64_t page){
 
 void IndianaStructure::addFreeQ(uint64_t page){
     struct memseg * tmp = this->freeQ.head;
-    do{
-        if((tmp->pages - 1) == page){
-            tmp->pages = page;
-            this->freeQ.size++;
-            return;
-        }
-        else if((tmp->epages + 1) == page){
-            tmp->epages = page;
-            this->freeQ.size++;
-            return;
-        }
-        tmp = tmp->next;
-    }while(tmp!=this->freeQ.tail && tmp !=NULL);
 
-    // When page is not contiguous to any existing blocks 
+    // Add page to head of list
     tmp = new memseg();
     tmp->pages = page;
     tmp->epages = page;
@@ -369,6 +324,8 @@ std::vector<uint64_t>  IndianaStructure::removeFreeQ(uint64_t n){
             removedPages.push_back(tp->pages + i);
         }
         if(n >= blockLength){
+            // FIXME: Use functions and not touch Memseg private members 
+            // directly
             freeQ.head = tp->next;
             free(tp);
             freeQ.size -= blockLength;
@@ -412,14 +369,11 @@ int main() {
 
     std::vector<double> initTime, free1Time, free2Time, allocate1Time, allocate2Time;
     // Memory 
-    //std::vector<uint64_t> memory(nPages);
 
     for(int outerI=0;outerI<10;outerI++){
         // Timestamps
         ptime initStart, initStop, allocate1Start, allocate1Stop, allocate2Start, allocate2Stop, free1Start, free1Stop, free2Start, free2Stop;
         // Queues 
-        //MemsegQueue freeQ, inactiveQ;
-        //Queue activeQ;
         IndianaStructure I;
 
         initStart = microsec_clock::universal_time();
