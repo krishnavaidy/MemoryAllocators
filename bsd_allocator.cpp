@@ -285,8 +285,8 @@ int main() {
     std::cout<<"\nInit time: "<<avg(initTime);
     std::cout<<"\nAvg time for allocating a single frame while allocating 3/4th memory: "<<avg(allocate1Time)/(0.75*nPages);
     std::cout<<"\nAvg time for allocating a single frame while alllocating from 1/2 memory to 3/4th memory: "<<avg(allocate2Time)/(0.25*nPages);
-    std::cout<<"\nFreeing memory from 3/4 memory to 1/2: "<<avg(free1Time);
-    std::cout<<"\nFreeing memory from 3/4 memory to empty: "<<avg(free2Time)<<std::endl;
+    std::cout<<"\nFreeing memory from 3/4 memory to 1/2: "<<avg(free1Time)/(nPages/4);
+    std::cout<<"\nFreeing memory from 3/4 memory to empty: "<<avg(free2Time)/(nPages*0.75)<<std::endl;
 
 }
 
